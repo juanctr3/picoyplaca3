@@ -1,6 +1,7 @@
 <?php
 /**
  * Configuración de Ciudades - Pico y Placa Colombia
+ * VERSIÓN CORREGIDA - Noviembre 2025
  * 
  * Define todas las ciudades, sus reglas de pico y placa,
  * horarios y festivos colombianos 2025+
@@ -42,7 +43,7 @@ $festivosColombia = [
 ];
 
 // ==========================================
-// CONFIGURACIÓN DE CIUDADES
+// CONFIGURACIÓN DE CIUDADES - ACTUALIZADO
 // ==========================================
 
 $ciudades = [
@@ -147,33 +148,33 @@ $ciudades = [
     ],
     
     // ==========================================
-    // BARRANQUILLA - Por día de semana
+    // BARRANQUILLA - SIN RESTRICCIONES (Particulares)
     // ==========================================
     'barranquilla' => [
         'nombre' => 'Barranquilla',
         'pais' => 'Colombia',
         'departamento' => 'Atlántico',
         'tipo' => 'dia-semana',
-        'horario' => '6:00 a.m. - 9:00 p.m.',
+        'horario' => 'Sin restricción para particulares',
         'horarioInicio' => 6,
         'horarioFin' => 21,
         'latitud' => 10.9639,
         'longitud' => -74.7964,
         'poblacion' => '1.2 millones',
-        'descripcion' => 'Restricción por día de la semana',
+        'descripcion' => 'No hay restricción para vehículos particulares',
         'restricciones' => [
-            'Monday' => [1, 2],
-            'Tuesday' => [3, 4],
-            'Wednesday' => [5, 6],
-            'Thursday' => [7, 8],
-            'Friday' => [9, 0],
+            'Monday' => [],
+            'Tuesday' => [],
+            'Wednesday' => [],
+            'Thursday' => [],
+            'Friday' => [],
             'Saturday' => [],
             'Sunday' => []
         ],
     ],
     
     // ==========================================
-    // CARTAGENA - Por día de semana
+    // CARTAGENA - Por día de semana (CORREGIDO)
     // ==========================================
     'cartagena' => [
         'nombre' => 'Cartagena',
@@ -188,66 +189,91 @@ $ciudades = [
         'poblacion' => '880 mil',
         'descripcion' => 'Restricción por día de la semana',
         'restricciones' => [
-            'Monday' => [0, 1],
-            'Tuesday' => [2, 3],
-            'Wednesday' => [4, 5],
-            'Thursday' => [6, 7],
-            'Friday' => [8, 9],
+            'Monday' => [3, 4],
+            'Tuesday' => [5, 6],
+            'Wednesday' => [7, 8],
+            'Thursday' => [9, 0],
+            'Friday' => [1, 2],
             'Saturday' => [],
             'Sunday' => []
         ],
     ],
     
     // ==========================================
-    // BUCARAMANGA - Por día de semana
+    // BUCARAMANGA - Por día de semana (CORREGIDO)
+    // Horario: 6:00am - 8:00pm de lunes a viernes
+    // Sábados: 9:00am - 1:00pm con restricciones especiales por fecha
     // ==========================================
     'bucaramanga' => [
         'nombre' => 'Bucaramanga',
         'pais' => 'Colombia',
         'departamento' => 'Santander',
         'tipo' => 'dia-semana',
-        'horario' => '6:30 a.m. - 8:30 p.m.',
+        'horario' => 'L-V: 6:00am-8:00pm | Sábados: 9:00am-1:00pm (fechas especiales)',
         'horarioInicio' => 6,
         'horarioFin' => 20,
         'latitud' => 7.1269,
         'longitud' => -73.1122,
         'poblacion' => '520 mil',
-        'descripcion' => 'Restricción por día de la semana',
+        'descripcion' => 'Restricción por día de la semana. Sábados con restricciones especiales por fecha.',
         'restricciones' => [
-            'Monday' => [0, 1],
-            'Tuesday' => [2, 3],
-            'Wednesday' => [4, 5],
-            'Thursday' => [6, 7],
-            'Friday' => [8, 9],
+            'Monday' => [3, 4],
+            'Tuesday' => [5, 6],
+            'Wednesday' => [7, 8],
+            'Thursday' => [9, 0],
+            'Friday' => [1, 2],
             'Saturday' => [],
             'Sunday' => []
         ],
+        'restricciones_sabados_especiales' => [
+            // Formato: 'YYYY-MM-DD' => [placas]
+            '2025-10-04' => [9, 0],
+            '2025-10-11' => [1, 2],
+            '2025-10-18' => [3, 4],
+            '2025-10-25' => [5, 6],
+            '2025-11-01' => [7, 8],
+            '2025-11-08' => [9, 0],
+            '2025-11-15' => [1, 2],
+            '2025-11-22' => [3, 4],
+            '2025-11-29' => [5, 6],
+            '2025-12-06' => [7, 8],
+            '2025-12-13' => [9, 0],
+            '2025-12-20' => [1, 2],
+            '2025-12-27' => [3, 4],
+        ]
     ],
     
     // ==========================================
-    // SANTA MARTA - Por día de semana
+    // SANTA MARTA - Por día de semana (CORREGIDO)
+    // Horario: 7:00am-9:00am, 11:30am-2:00pm, 5:00pm-8:00pm
+    // Simplificado a 7:00am - 8:00pm para el sistema actual
     // ==========================================
     'santa_marta' => [
         'nombre' => 'Santa Marta',
         'pais' => 'Colombia',
         'departamento' => 'Magdalena',
         'tipo' => 'dia-semana',
-        'horario' => '6:00 a.m. - 7:00 p.m.',
-        'horarioInicio' => 6,
-        'horarioFin' => 19,
+        'horario' => '7:00am-9:00am | 11:30am-2:00pm | 5:00pm-8:00pm',
+        'horarioInicio' => 7,
+        'horarioFin' => 20,
         'latitud' => 11.2456,
         'longitud' => -74.2301,
         'poblacion' => '480 mil',
-        'descripcion' => 'Restricción por día de la semana',
+        'descripcion' => 'Restricción en 3 franjas horarias por día de la semana',
         'restricciones' => [
-            'Monday' => [5, 6],
-            'Tuesday' => [7, 8],
-            'Wednesday' => [9, 0],
-            'Thursday' => [1, 2],
-            'Friday' => [3, 4],
+            'Monday' => [1, 2],
+            'Tuesday' => [3, 4],
+            'Wednesday' => [5, 6],
+            'Thursday' => [7, 8],
+            'Friday' => [9, 0],
             'Saturday' => [],
             'Sunday' => []
         ],
+        'franjas_horarias' => [
+            'franja_1' => ['inicio' => 7, 'fin' => 9],
+            'franja_2' => ['inicio' => 11, 'fin' => 14],
+            'franja_3' => ['inicio' => 17, 'fin' => 20]
+        ]
     ],
     
 ];

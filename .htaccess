@@ -81,18 +81,44 @@
     
     ExpiresByType application/json "access plus 1 day"
     ExpiresByType application/xml "access plus 1 day"
+    
+    # ==========================================
+    # PWA - MANIFEST Y SERVICE WORKER
+    # ==========================================
+    
+    ExpiresByType application/manifest+json "access plus 3600 seconds"
+    ExpiresByType application/x-web-app-manifest+json "access plus 3600 seconds"
 </IfModule>
 
 # ==========================================
-# HEADERS DE SEGURIDAD
+# HEADERS DE SEGURIDAD Y PWA
 # ==========================================
 
 <IfModule mod_headers.c>
+    # Seguridad
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
     Header append Vary Accept-Encoding
+    
+    # PWA - CORS para manifest
+    <FilesMatch "\.json$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Content-Type "application/json; charset=utf-8"
+    </FilesMatch>
+    
+    # PWA - Service Worker
+    <FilesMatch "service-worker\.js$">
+        Header set Cache-Control "public, max-age=3600, must-revalidate"
+        Header set Service-Worker-Allowed "/"
+    </FilesMatch>
+    
+    # Manifest con cache
+    <FilesMatch "manifest\.json$">
+        Header set Cache-Control "public, max-age=3600, must-revalidate"
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
 </IfModule>
 
 # ==========================================
@@ -103,7 +129,8 @@
     Deny from all
 </FilesMatch>
 
-<FilesMatch "\.(jpg|jpeg|png|gif|pdf|css|js|txt|xml|svg|woff|woff2|ttf|otf)$">
+# PERMITIR ARCHIVOS NECESARIOS
+<FilesMatch "\.(jpg|jpeg|png|gif|pdf|css|js|txt|xml|svg|woff|woff2|ttf|otf|json|webmanifest)$">
     Allow from all
 </FilesMatch>
 
@@ -115,3 +142,49 @@ Options -Indexes
 
 AddDefaultCharset UTF-8
 AddType 'text/html; charset=UTF-8' html htm
+
+# PWA - MIME TYPES
+AddType application/manifest+json .webmanifest
+AddType application/manifest+json .json
+AddType application/x-web-app-manifest+json .json
+AddType application/javascript .js
+
+# ==========================================
+# MÉTODOS HTTP PERMITIDOS
+# ==========================================
+
+<LimitExcept GET POST HEAD OPTIONS>
+    Deny from all
+</LimitExcept>
+
+# ==========================================
+# REDIRECCIONES PARA PÁGINAS DE COUNTDOWN
+# ==========================================
+
+# Agregar estas reglas a tu .htaccess (dentro de <IfModule mod_rewrite.c>)
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^a-que-hora-empieza-el-pico-y-placa/?$ inicio-pico-y-placa.php [L,QSA]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^a-que-hora-se-acaba-el-pico-y-placa/?$ fin-pico-y-placa.php [L,QSA]
+
+# ==========================================
+# REDIRECCIÓN DE ERRORES 404
+# ==========================================
+
+ErrorDocument 404 /404.php
+
+
+# ==========================================
+# PREVENIR HOTLINKING
+# ==========================================
+
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^https://picoyplacabogota\.com\.co [NC]
+    RewriteCond %{REQUEST_URI} !^/\. [NC]
+    RewriteRule \.(jpg|jpeg|gif|png|svg)$ - [L]
+</IfModule>

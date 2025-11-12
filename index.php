@@ -146,8 +146,7 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     }
     </script>
     
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-2L2EV10ZWW"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2L2EV10ZWW"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -203,16 +202,14 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         
         /* COUNTDOWN MEJORADO */
         #countdownContainer { 
-            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.95) 100%);
-            border: 3px solid #667eea;
-            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.2);
-            border-radius: 20px;
-            padding: 30px 20px;
-            margin: 20px 0;
-            display: none;
-        }
-        
-        #countdownContainer.show { display: block; }
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.95) 100%);
+    border: 3px solid #667eea;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.2);
+    border-radius: 20px;
+    padding: 30px 20px;
+    margin: 20px 0;
+    display: block !important;
+}
         
         #countdownTitle {
             color: #667eea;
@@ -499,115 +496,162 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         let countdownInterval;
         
         function updateTodayInfo() {
-            const data = datosHoy[selectedCity];
-            if (!data) return;
-            
-            const today = new Date();
-            const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
-            const dateStr = today.toLocaleDateString('es-CO', options);
-            
-            document.getElementById('today-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-            document.getElementById('city-today').textContent = data.nombre;
-            document.getElementById('city-schedule').textContent = data.horario;
-            document.getElementById('pageTitle').textContent = '🚗 Pico y Placa hoy en ' + data.nombre;
-            
-            // Verificar si es fin de semana o festivo
-            const diaSemana = today.getDay();
-            const esFinDeSemana = diaSemana === 0 || diaSemana === 6; // 0 = domingo, 6 = sábado
-            
-            const restricciones = data.restricciones;
-            const permitidas = data.permitidas;
-            
-            // Si es fin de semana, no hay pico y placa
-            if (esFinDeSemana) {
-                document.getElementById('today-status').textContent = 'Libre - Fin de Semana';
-                document.getElementById('restriction-label').innerHTML = '✅ Sin restricción';
-                document.getElementById('plates-restricted-today').innerHTML = '<p class="no-restriction">✅ Fin de Semana - Sin restricción</p>';
-                document.getElementById('plates-allowed-today').innerHTML = '<p class="no-restriction">✅ Todos los vehículos (0-9)</p>';
-                updateCountdown(data.horarioInicio, data.horarioFin);
-                document.body.className = 'sin-pico';
-            } else {
-                // Es día laboral
-                if (restricciones.length > 0) {
-                    document.getElementById('today-status').textContent = restricciones.join(', ');
-                    document.getElementById('restriction-label').innerHTML = '🚫 Con restricción:';
-                    document.getElementById('plates-restricted-today').innerHTML = restricciones.map(p => '<span class="plate-badge restricted">' + p + '</span>').join('');
-                    document.getElementById('plates-allowed-today').innerHTML = permitidas.map(p => '<span class="plate-badge">' + p + '</span>').join('');
-                    updateCountdown(data.horarioInicio, data.horarioFin);
-                } else {
-                    document.getElementById('today-status').textContent = 'Libre';
-                    document.getElementById('restriction-label').innerHTML = '✅ Hoy no hay restricción';
-                    document.getElementById('plates-restricted-today').innerHTML = '<p class="no-restriction">✅ Hoy no hay restricción</p>';
-                    document.getElementById('plates-allowed-today').innerHTML = permitidas.map(p => '<span class="plate-badge">' + p + '</span>').join('');
-                    updateCountdown(data.horarioInicio, data.horarioFin);
-                    document.body.className = 'sin-pico';
-                }
-            }
+    const data = datosHoy[selectedCity];
+    
+    if (!data) {
+        console.error('❌ Ciudad no encontrada:', selectedCity);
+        return;
+    }
+    
+    console.log('\n📍 Actualizando:', selectedCity);
+    
+    const today = new Date();
+    const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
+    const dateStr = today.toLocaleDateString('es-CO', options);
+    
+    document.getElementById('today-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+    document.getElementById('city-today').textContent = data.nombre;
+    document.getElementById('city-schedule').textContent = data.horario;
+    document.getElementById('pageTitle').textContent = '🚗 Pico y Placa hoy en ' + data.nombre;
+    
+    const diaSemana = today.getDay();
+    const esFinDeSemana = diaSemana === 0 || diaSemana === 6;
+    
+    const restricciones = data.restricciones;
+    const permitidas = data.permitidas;
+    
+    // ✅ CONVERTIR A NÚMEROS ANTES DE PASAR
+    const horarioInicio = parseInt(data.horarioInicio, 10);
+    const horarioFin = parseInt(data.horarioFin, 10);
+    
+    console.log('   Inicio:', horarioInicio, 'Fin:', horarioFin);
+    
+    updateCountdown(horarioInicio, horarioFin);
+    
+    if (esFinDeSemana) {
+        document.getElementById('today-status').textContent = 'Libre - Fin de Semana';
+        document.getElementById('restriction-label').innerHTML = '✅ Sin restricción';
+        document.getElementById('plates-restricted-today').innerHTML = '<p class="no-restriction">✅ Fin de Semana - Sin restricción</p>';
+        document.getElementById('plates-allowed-today').innerHTML = '<p class="no-restriction">✅ Todos los vehículos (0-9)</p>';
+        document.body.className = 'sin-pico';
+    } else {
+        if (restricciones && restricciones.length > 0) {
+            document.getElementById('today-status').textContent = restricciones.join(', ');
+            document.getElementById('restriction-label').innerHTML = '🚫 Con restricción:';
+            document.getElementById('plates-restricted-today').innerHTML = restricciones.map(p => '<span class="plate-badge restricted">' + p + '</span>').join('');
+            document.getElementById('plates-allowed-today').innerHTML = permitidas.map(p => '<span class="plate-badge">' + p + '</span>').join('');
+        } else {
+            document.getElementById('today-status').textContent = 'Libre';
+            document.getElementById('restriction-label').innerHTML = '✅ Hoy no hay restricción';
+            document.getElementById('plates-restricted-today').innerHTML = '<p class="no-restriction">✅ Hoy no hay restricción</p>';
+            document.getElementById('plates-allowed-today').innerHTML = permitidas.map(p => '<span class="plate-badge">' + p + '</span>').join('');
+            document.body.className = 'sin-pico';
         }
+    }
+}
         
         function updateCountdown(inicio, fin) {
-            clearInterval(countdownInterval);
+    clearInterval(countdownInterval);
+    
+    // ✅ CONVERTIR A NÚMEROS EXPLÍCITAMENTE
+    inicio = parseInt(inicio, 10);
+    fin = parseInt(fin, 10);
+    
+    console.log('🕐 Countdown iniciado');
+    console.log('   Inicio:', inicio, 'tipo:', typeof inicio);
+    console.log('   Fin:', fin, 'tipo:', typeof fin);
+    
+    function calcularTiempo() {
+        const ahora = new Date();
+        const horaActual = ahora.getHours();
+        
+        console.log('⏰ Hora actual:', horaActual);
+        console.log('   ¿' + horaActual + ' >= ' + inicio + '?', horaActual >= inicio);
+        console.log('   ¿' + horaActual + ' < ' + fin + '?', horaActual < fin);
+        
+        let proximoTiempo = 0;
+        let titulo = '';
+        let mensaje = '';
+        
+        // ESTÁ ACTIVO AHORA
+        if (horaActual >= inicio && horaActual < fin) {
+            console.log('✅ PICO ACTIVO AHORA');
+            titulo = '🚨 PICO Y PLACA ACTIVO';
+            mensaje = '⏱️ Falta para terminar:';
             
-            function calcularTiempo() {
-                const ahora = new Date();
-                const horaActual = ahora.getHours();
-                const minActual = ahora.getMinutes();
-                const segActual = ahora.getSeconds();
-                
-                let proximoTiempo;
-                let activo = false;
-                let titulo = '';
-                let mensaje = '';
-                
-                if (horaActual >= inicio && horaActual < fin) {
-                    // Está activo - mostrar cuánto falta para terminar
-                    activo = true;
-                    titulo = '🚨 PICO Y PLACA ACTIVO';
-                    mensaje = '⏱️ Falta para terminar:';
-                    const finDate = new Date(ahora);
-                    finDate.setHours(fin, 0, 0);
-                    proximoTiempo = Math.max(0, (finDate - ahora) / 1000);
-                    
-                    document.body.className = 'pico-activo';
-                } else {
-                    // No está activo - mostrar cuánto falta para iniciar
-                    titulo = '✅ PRÓXIMO PICO Y PLACA';
-                    mensaje = '⏳ Falta para iniciar:';
-                    
-                    let proximaActivacion = new Date(ahora);
-                    proximaActivacion.setHours(inicio, 0, 0);
-                    
-                    if (proximaActivacion <= ahora) {
-                        proximaActivacion.setDate(proximaActivacion.getDate() + 1);
-                    }
-                    
-                    proximoTiempo = (proximaActivacion - ahora) / 1000;
-                    document.body.className = 'sin-pico';
-                }
-                
-                const horas = Math.floor(proximoTiempo / 3600);
-                const minutos = Math.floor((proximoTiempo % 3600) / 60);
-                const segundos = Math.floor(proximoTiempo % 60);
-                
-                document.getElementById('countdownTitle').innerHTML = titulo + '<br><small style="font-size: 0.8rem; font-weight: 500; text-transform: none;">' + mensaje + '</small>';
-                document.getElementById('countdownHours').textContent = String(horas).padStart(2, '0');
-                document.getElementById('countdownMinutes').textContent = String(minutos).padStart(2, '0');
-                document.getElementById('countdownSeconds').textContent = String(segundos).padStart(2, '0');
-                document.getElementById('countdownContainer').classList.add('show');
-            }
+            const ahora_ms = ahora.getTime();
+            const fin_hoy = new Date(ahora);
+            fin_hoy.setHours(fin, 0, 0, 0);
             
-            calcularTiempo();
-            countdownInterval = setInterval(calcularTiempo, 1000);
+            proximoTiempo = Math.max(0, (fin_hoy.getTime() - ahora_ms) / 1000);
+            document.body.className = 'pico-activo';
+        } 
+        // INICIA HOY
+        else if (horaActual < inicio) {
+            console.log('✅ INICIA HOY A LAS', inicio + ':00');
+            titulo = '✅ PICO Y PLACA HOY';
+            mensaje = '⏳ Falta para iniciar:';
+            
+            const ahora_ms = ahora.getTime();
+            const inicio_hoy = new Date(ahora);
+            inicio_hoy.setHours(inicio, 0, 0, 0);
+            
+            proximoTiempo = (inicio_hoy.getTime() - ahora_ms) / 1000;
+            document.body.className = 'sin-pico';
+        } 
+        // INICIA MAÑANA
+        else {
+            console.log('✅ INICIA MAÑANA A LAS', inicio + ':00');
+            titulo = '✅ PRÓXIMO PICO Y PLACA';
+            mensaje = '📅 Falta para iniciar mañana:';
+            
+            const ahora_ms = ahora.getTime();
+            const inicio_mañana = new Date(ahora);
+            inicio_mañana.setDate(inicio_mañana.getDate() + 1);
+            inicio_mañana.setHours(inicio, 0, 0, 0);
+            
+            proximoTiempo = (inicio_mañana.getTime() - ahora_ms) / 1000;
+            document.body.className = 'sin-pico';
         }
         
-        function selectCity(ciudad) {
-            selectedCity = ciudad;
-            document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + ciudad).classList.add('active');
-            updateTodayInfo();
-            document.getElementById('result-box').innerHTML = '';
-            document.getElementById('plate-input').value = '';
+        const horas = Math.floor(proximoTiempo / 3600);
+        const minutos = Math.floor((proximoTiempo % 3600) / 60);
+        const segundos = Math.floor(proximoTiempo % 60);
+        
+        console.log('⏱️ Tiempo:', horas + 'h ' + minutos + 'm ' + segundos + 's');
+        
+        const titleEl = document.getElementById('countdownTitle');
+        if (titleEl) {
+            titleEl.innerHTML = titulo + '<br><small style="font-size: 0.8rem; font-weight: 500;">' + mensaje + '</small>';
         }
+        
+        document.getElementById('countdownHours').textContent = String(horas).padStart(2, '0');
+        document.getElementById('countdownMinutes').textContent = String(minutos).padStart(2, '0');
+        document.getElementById('countdownSeconds').textContent = String(segundos).padStart(2, '0');
+        
+        const container = document.getElementById('countdownContainer');
+        if (container && !container.classList.contains('show')) {
+            container.classList.add('show');
+        }
+    }
+    
+    calcularTiempo();
+    countdownInterval = setInterval(calcularTiempo, 1000);
+}
+        
+        function selectCity(ciudad) {
+    console.log('\n🏙️ Cambiando a ciudad:', ciudad);
+    
+    selectedCity = ciudad;
+    
+    document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + ciudad).classList.add('active');
+    
+    updateTodayInfo();
+    
+    document.getElementById('result-box').innerHTML = '';
+    document.getElementById('plate-input').value = '';
+}
         
         function searchPlate() {
             const plate = document.getElementById('plate-input').value;
@@ -683,8 +727,9 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         }
         
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('btn-bogota').classList.add('active');
-            updateTodayInfo();
+            // CORRECCIÓN: Llamamos directamente a selectCity('bogota') para inicializar
+            // toda la interfaz y el contador de forma robusta.
+            selectCity('bogota');
             initSliders();
             
             const plateInput = document.getElementById('plate-input');

@@ -5,6 +5,8 @@
  * 
  * Muestra countdown hasta que TERMINA el pico y placa
  * con opción de seleccionar ciudad
+ * 
+ * ACTUALIZADO: Noviembre 2025 - Información corregida para todas las ciudades
  */
 
 require_once 'clases/PicoYPlaca.php';
@@ -367,6 +369,12 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
             color: #084298;
         }
 
+        .status-banner.sin-restriccion {
+            background: #f8f9fa;
+            border-color: #6c757d;
+            color: #495057;
+        }
+
         /* Info adicional */
         .info-adicional {
             background: #f0f8ff;
@@ -390,6 +398,17 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
 
         .info-adicional li {
             margin-bottom: 8px;
+        }
+
+        .notice-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
         }
 
         /* Responsive */
@@ -446,6 +465,27 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
             <h2 class="ciudad-titulo"><?php echo $ciudad_info['nombre']; ?></h2>
             <p class="ciudad-subtitulo">Horario: <?php echo $ciudad_info['horario']; ?></p>
 
+            <!-- Noticia especial para Barranquilla -->
+            <?php if ($ciudad_seleccionada === 'barranquilla'): ?>
+            <div class="notice-box">
+                ✅ SIN RESTRICCIÓN - Barranquilla no tiene pico y placa para vehículos particulares
+            </div>
+            <?php endif; ?>
+
+            <!-- Noticia especial para Bucaramanga -->
+            <?php if ($ciudad_seleccionada === 'bucaramanga'): ?>
+            <div class="notice-box">
+                ⚠️ NOTA: Los sábados tienen restricción 09:00am-1:00pm con rotación especial
+            </div>
+            <?php endif; ?>
+
+            <!-- Noticia especial para Santa Marta -->
+            <?php if ($ciudad_seleccionada === 'santa_marta'): ?>
+            <div class="notice-box">
+                🕐 HORARIOS ESPECIALES: 7am-9am | 11:30am-2pm | 5pm-8pm
+            </div>
+            <?php endif; ?>
+
             <!-- Info Cards -->
             <div class="info-cards">
                 <div class="info-card">
@@ -495,7 +535,7 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
                     <li>El pico y placa termina a las <strong><?php echo sprintf("%02d:%02d", $horaFin, 0); ?></strong> en <?php echo $ciudad_info['nombre']; ?></li>
                     <li>A partir de esa hora puedes circular sin restricción</li>
                     <li>Verifica tu placa antes de salir</li>
-                    <li>Suscríbete para recibir alertas</li>
+                    <li>Los festivos NO hay pico y placa</li>
                 </ul>
             </div>
 
@@ -563,6 +603,10 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
             if (horaActual >= ciudadData.horarioInicio && horaActual < ciudadData.horarioFin) {
                 document.getElementById('statusBanner').innerHTML = 
                     '<div class="status-banner activo">🚗 PICO Y PLACA ACTIVO - Faltan ' + String(horas).padStart(2, '0') + ':' + String(minutos).padStart(2, '0') + ' para terminar</div>';
+            } else if (ciudadData.horarioFin === 24) {
+                // Sin restricción
+                document.getElementById('statusBanner').innerHTML = 
+                    '<div class="status-banner sin-restriccion">✅ SIN RESTRICCIÓN - Este municipio no tiene pico y placa</div>';
             } else if (horaActual < ciudadData.horarioInicio) {
                 document.getElementById('statusBanner').innerHTML = 
                     '<div class="status-banner">⏰ Pico y placa inicia en ' + String(horas).padStart(2, '0') + ' horas</div>';

@@ -5,6 +5,8 @@
  * 
  * Muestra countdown hasta que INICIA el pico y placa
  * con opción de seleccionar ciudad
+ * 
+ * ACTUALIZADO: Noviembre 2025 - Información corregida para todas las ciudades
  */
 
 require_once 'clases/PicoYPlaca.php';
@@ -367,6 +369,12 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
             color: #721c24;
         }
 
+        .status-banner.sin-restriccion {
+            background: #cfe2ff;
+            border-color: #0d6efd;
+            color: #084298;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .main-content {
@@ -394,6 +402,33 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
                 font-size: 1.5rem;
             }
         }
+
+        /* Animación de entrada de sugerencias */
+        .suggestion-item {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notice-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -420,6 +455,27 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
         <div class="main-content">
             <h2 class="ciudad-titulo"><?php echo $ciudad_info['nombre']; ?></h2>
             <p class="ciudad-subtitulo">Horario: <?php echo $ciudad_info['horario']; ?></p>
+
+            <!-- Noticia especial para Barranquilla -->
+            <?php if ($ciudad_seleccionada === 'barranquilla'): ?>
+            <div class="notice-box">
+                ✅ SIN RESTRICCIÓN - Barranquilla no tiene pico y placa para vehículos particulares
+            </div>
+            <?php endif; ?>
+
+            <!-- Noticia especial para Bucaramanga -->
+            <?php if ($ciudad_seleccionada === 'bucaramanga'): ?>
+            <div class="notice-box">
+                ⚠️ NOTA: Los sábados tienen restricción 09:00am-1:00pm con rotación especial
+            </div>
+            <?php endif; ?>
+
+            <!-- Noticia especial para Santa Marta -->
+            <?php if ($ciudad_seleccionada === 'santa_marta'): ?>
+            <div class="notice-box">
+                🕐 HORARIOS ESPECIALES: 7am-9am | 11:30am-2pm | 5pm-8pm
+            </div>
+            <?php endif; ?>
 
             <!-- Info Cards -->
             <div class="info-cards">
@@ -527,6 +583,10 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
             if (horaActual >= ciudadData.horarioInicio && horaActual < ciudadData.horarioFin) {
                 document.getElementById('statusBanner').innerHTML = 
                     '<div class="status-banner activo">🚨 PICO Y PLACA ACTIVO AHORA - No circular con placa restringida</div>';
+            } else if (ciudadData.horarioFin === 24) {
+                // Sin restricción
+                document.getElementById('statusBanner').innerHTML = 
+                    '<div class="status-banner sin-restriccion">✅ SIN RESTRICCIÓN - Este municipio no tiene pico y placa</div>';
             } else {
                 document.getElementById('statusBanner').innerHTML = 
                     '<div class="status-banner">✅ Pico y placa inactivo - Puedes circular libremente</div>';

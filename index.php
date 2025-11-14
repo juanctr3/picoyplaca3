@@ -325,20 +325,231 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
             .date-search-section, .search-box, .restrictions-today { padding: 15px; }
             input, select { font-size: 16px; }
         }
+                          
+                          /* Contenedor flotante PWA */
+#pwaBtnContainer {
+    position: fixed;
+    bottom: 70px;
+    right: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+    animation: slideUpPwa 0.5s ease-out;
+}
+
+#pwaBtnContainer.show {
+    display: flex !important;
+}
+
+@keyframes slideUpPwa {
+    from {
+        opacity: 0;
+        transform: translateY(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Botón principal de instalación */
+.floating-install-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    min-width: 150px;
+    justify-content: center;
+}
+
+.floating-install-btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6);
+}
+
+/* Botón cerrar */
+.floating-install-btn-close {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(255, 107, 107, 0.3);
+    transition: all 0.3s;
+    font-size: 1.3rem;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.floating-install-btn-close:hover {
+    transform: scale(1.1);
+}
+
+/* Responsive Mobile */
+@media (max-width: 768px) {
+    #pwaBtnContainer {
+        bottom: 80px;
+        right: 10px;
+        left: 10px;
+        flex-direction: row;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+    
+    .floating-install-btn-primary {
+        flex: 1;
+        min-width: auto;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #pwaBtnContainer {
+        bottom: 70px;
+        right: 8px;
+        left: 8px;
+    }
+    
+    .floating-install-btn-close {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+}
+
+/* Modal para iOS */
+#iosModalPwa {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+#iosModalPwa.show {
+    display: flex;
+}
+
+.ios-modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.ios-modal-content h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.ios-steps {
+    text-align: left;
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
+    font-size: 0.9rem;
+}
+
+.ios-steps ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.ios-modal-close {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+}
+                                
+                                .subtitle {
+    font-size: 1.1rem;
+    opacity: 0.95;
+    line-height: 1.5;
+    transition: all 0.3s ease;
+}
+
+#cityNameSubtitle {
+    transition: all 0.4s ease;
+}
+
+@media (max-width: 768px) {
+    .subtitle {
+        font-size: 0.95rem;
+    }
+}
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <button class="install-btn" id="installBtn">⬇️ Instalar</button>
+            <!-- BOTÓN FLOTANTE PWA - VERSIÓN MEJORADA -->
+<div id="pwaBtnContainer" style="display: none;">
+    <button id="installPwaBtn" class="floating-install-btn-primary">
+        ⬇️ <span id="installBtnText">Instalar App</span>
+    </button>
+    <button id="closePwaBtn" class="floating-install-btn-close">
+        ✕
+    </button>
+</div>
             <h1 id="pageTitle">
-                <?php if ($isDatePage): ?>
-                    🚗 Pico y Placa en <?php echo htmlspecialchars($dateData['cityName']); ?>
-                <?php else: ?>
-                    🚗 Pico y Placa hoy en Bogotá
-                <?php endif; ?>
-            </h1>
-            <p class="subtitle">Consulta restricciones vehiculares en tiempo real</p>
+    <?php if ($isDatePage): ?>
+        🚗 Pico y placa el <?php echo ucfirst($dateData['dayNameEs']); ?> en <?php echo htmlspecialchars($dateData['cityName']); ?>
+    <?php else: ?>
+        🚗 Pico y placa hoy en Bogotá
+    <?php endif; ?>
+</h1>
+            
+            <p class="subtitle" id="dynamicSubtitle">
+                Que no te pille el Poli 🚓 ni las Cámaras 📸 Mantente informado y 🪰 sobre las restricciones vehiculares en 
+                <span id="cityNameSubtitle" style="color: #ffd700; font-weight: 800; background: rgba(255, 215, 0, 0.2); padding: 4px 8px; border-radius: 6px;">Bogotá</span>
+                y evita perder hasta <span style="color: #ff6b6b; font-weight: 800;">$1.4 millones</span> 💸. Luego no 😩
+            </p>
+            
         </header>
         
         <?php if (!$isDatePage): ?>
@@ -431,12 +642,21 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         </div>
         
         <?php else: ?>
-        
-        <button class="back-btn" onclick="backToHome()" style="display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; min-height: 44px;">← Volver</button>
-        
-        <div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
-            <h2 style="margin-bottom: 15px;">📅 <?php echo htmlspecialchars($dateData['dayNum'] . ' de ' . $dateData['monthName'] . ' de ' . $dateData['year']); ?></h2>
-            <h3 style="color: #667eea; margin-bottom: 15px;">🚗 Pico y Placa en <?php echo htmlspecialchars($dateData['cityName']); ?></h3>
+
+<button class="back-btn" onclick="backToHome()" style="display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; min-height: 44px;">Ver Pico Y Placa Hoy Y Más Fechas</button>
+
+<!-- ✅ SUBTITLE DINÁMICO PARA PÁGINA DE FECHA -->
+<p class="subtitle" style="margin-bottom: 20px;">
+    Que no te pille el Poli 🚓 ni las Cámaras 📸 Mantente informado y 🪰 sobre las restricciones vehiculares en 
+    <span style="color: #ffd700; font-weight: 800; background: rgba(255, 215, 0, 0.2); padding: 4px 8px; border-radius: 6px;">
+        <?php echo htmlspecialchars($dateData['cityName']); ?>
+    </span>
+    y evita perder hasta <span style="color: #ff6b6b; font-weight: 800;">$1.4 millones</span> 💸. Luego no 😩
+</p>
+
+<div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+    <h2 style="margin-bottom: 15px;">📅 <?php echo htmlspecialchars($dateData['dayNum'] . ' de ' . $dateData['monthName'] . ' de ' . $dateData['year']); ?></h2>
+    <h3 style="color: #667eea; margin-bottom: 15px;">🚗 Pico y Placa en <?php echo htmlspecialchars($dateData['cityName']); ?></h3>
             
             <div style="background: #f0f0f0; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
                 <p><strong>📅 Día:</strong> <?php echo ucfirst($dateData['dayNameEs']); ?></p>
@@ -565,7 +785,7 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
             document.body.className = 'sin-pico';
         }
     }
-}
+        }
         
         function updateCountdown(inicio, fin) {
     clearInterval(countdownInterval);
@@ -665,34 +885,70 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
     
     // Activar botón de la ciudad seleccionada
-    document.getElementById('btn-' + ciudad).classList.add('active');
+    const btnCity = document.getElementById('btn-' + ciudad);
+    if (btnCity) {
+        btnCity.classList.add('active');
+    }
+    
+    // Obtener datos de la ciudad
+    const data = datosHoy[ciudad];
+    if (!data) {
+        console.error('❌ Ciudad no encontrada:', ciudad);
+        return;
+    }
+    
+    // ✅ ACTUALIZAR TÍTULO EN PESTAÑA DEL NAVEGADOR
+    const newTitle = `Pico y placa hoy en ${data.nombre} 🚗 | Consulta en Tiempo Real`;
+    document.title = newTitle;
+    console.log('📝 Título actualizado:', newTitle);
+    
+    // ✅ ACTUALIZAR META TAGS
+    // Meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+        metaDescription.setAttribute('content', `Consulta el pico y placa de hoy en ${data.nombre}. Horario: ${data.horario}. Consulta en tiempo real.`);
+    }
+    
+    // Meta og:title (Open Graph - Redes Sociales)
+    const metaOgTitle = document.querySelector('meta[property="og:title"]');
+    if (metaOgTitle) {
+        metaOgTitle.setAttribute('content', newTitle);
+    }
+    
+    // Meta og:description
+    const metaOgDescription = document.querySelector('meta[property="og:description"]');
+    if (metaOgDescription) {
+        metaOgDescription.setAttribute('content', `Consulta el pico y placa de hoy en ${data.nombre}. Horario: ${data.horario}. Consulta en tiempo real.`);
+    }
+    
+    // ✅ ACTUALIZAR HEADING VISIBLE
+    const pageTitle = document.getElementById('pageTitle');
+    if (pageTitle) {
+        pageTitle.textContent = `🚗 Pico y placa hoy en ${data.nombre}`;
+    }
+    
+    console.log('✅ Títulos actualizados para:', data.nombre);
     
     // Actualizar información del día
     updateTodayInfo();
     
-    // ✅ ACTUALIZAR TÍTULO DINÁMICO
-    const data = datosHoy[ciudad];
+        // ✅ ACTUALIZAR SUBTITLE DINÁMICO
+const cityNameSubtitle = document.getElementById('cityNameSubtitle');
+if (cityNameSubtitle) {
+    cityNameSubtitle.textContent = data.nombre;
     
-    // 1. Actualizar title del navegador (en la pestaña)
-    const newTitle = `Pico y placa hoy en ${data.nombre} 🚗 | Consulta en Tiempo Real`;
-    document.title = newTitle;
-    
-    // 2. Actualizar meta og:title (para redes sociales)
-    document.querySelector('meta[property="og:title"]').setAttribute('content', newTitle);
-    
-    // 3. Actualizar meta description
-    const newDescription = `Consulta el pico y placa de hoy en ${data.nombre}. Horario: ${data.horario}. Consulta en tiempo real.`;
-    document.querySelector('meta[name="description"]').setAttribute('content', newDescription);
-    document.querySelector('meta[property="og:description"]').setAttribute('content', newDescription);
-    
-    // 4. Actualizar heading visible en la página
-    document.getElementById('pageTitle').textContent = `🚗 Pico y placa hoy en ${data.nombre}`;
-    
+    // Animación de fade
+    cityNameSubtitle.style.opacity = '0';
+    setTimeout(() => {
+        cityNameSubtitle.style.opacity = '1';
+    }, 100);
+}
+
+console.log('📝 Subtitle actualizado para:', data.nombre)
+        
     // Limpiar búsqueda anterior
     document.getElementById('result-box').innerHTML = '';
     document.getElementById('plate-input').value = '';
-    
-    console.log('✅ Ciudad actualizada:', data.nombre);
 }
         
         function searchPlate() {
@@ -784,6 +1040,93 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/service-worker.js').catch(e => console.log('SW:', e));
         }
+                                
+                                let deferredPrompt;
+
+// Detectar SO
+function getOS() {
+    const ua = navigator.userAgent;
+    if (ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) return 'ios';
+    if (ua.indexOf('Android') > -1) return 'android';
+    return 'desktop';
+}
+
+// Evento: PWA lista para instalar
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('✅ PWA lista para instalar');
+    e.preventDefault();
+    deferredPrompt = e;
+    showPwaButton();
+});
+
+function showPwaButton() {
+    const container = document.getElementById('pwaBtnContainer');
+    if (container) {
+        container.classList.add('show');
+        container.style.display = 'flex';
+    }
+}
+
+function hidePwaButton() {
+    const container = document.getElementById('pwaBtnContainer');
+    if (container) {
+        container.classList.remove('show');
+        setTimeout(() => {
+            container.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Click instalar
+document.getElementById('installPwaBtn').addEventListener('click', async () => {
+    const os = getOS();
+    
+    if (os === 'ios') {
+        showIOSInstructions();
+    } else if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Usuario eligió: ${outcome}`);
+        deferredPrompt = null;
+        hidePwaButton();
+    }
+});
+
+// Click cerrar
+document.getElementById('closePwaBtn').addEventListener('click', hidePwaButton);
+
+// Instrucciones iOS
+function showIOSInstructions() {
+    let modal = document.getElementById('iosModalPwa');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'iosModalPwa';
+        modal.innerHTML = `
+            <div class="ios-modal-content">
+                <h2>📱 Instalar en iOS</h2>
+                <p>Sigue estos pasos:</p>
+                <div class="ios-steps">
+                    <ol>
+                        <li>Toca <strong>Compartir</strong> (↗️)</li>
+                        <li>Toca <strong>"Añadir a pantalla de inicio"</strong></li>
+                        <li>¡Listo! La app aparecerá en tu pantalla de inicio</li>
+                    </ol>
+                </div>
+                <button class="ios-modal-close" onclick="this.parentElement.parentElement.classList.remove('show')">
+                    Entendido
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    modal.classList.add('show');
+}
+
+// App instalada
+window.addEventListener('appinstalled', () => {
+    console.log('✅ PWA instalada');
+    hidePwaButton();
+});
     </script>
 </body>
 </html>

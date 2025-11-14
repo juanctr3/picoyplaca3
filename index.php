@@ -363,24 +363,24 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         </div>
         
         <div id="countdownContainer">
-            <h3 id="countdownTitle">⏰ Pico y Placa Activo</h3>
-            <div class="countdown-display">
-                <div class="countdown-item">
-                    <div id="countdownHours">00</div>
-                    <small>Horas</small>
-                </div>
-                <span class="countdown-separator">:</span>
-                <div class="countdown-item">
-                    <div id="countdownMinutes">00</div>
-                    <small>Minutos</small>
-                </div>
-                <span class="countdown-separator">:</span>
-                <div class="countdown-item">
-                    <div id="countdownSeconds">00</div>
-                    <small>Segundos</small>
-                </div>
-            </div>
+    <h3 id="countdownTitle">⏰ Pico y Placa Activo</h3>
+    <div class="countdown-display" id="countdownDisplay">
+        <div class="countdown-item">
+            <div id="countdownHours">00</div>
+            <small>Horas</small>
         </div>
+        <span class="countdown-separator">:</span>
+        <div class="countdown-item">
+            <div id="countdownMinutes">00</div>
+            <small>Minutos</small>
+        </div>
+        <span class="countdown-separator">:</span>
+        <div class="countdown-item">
+            <div id="countdownSeconds">00</div>
+            <small>Segundos</small>
+        </div>
+    </div>
+</div>
         
         <div class="main-content">
             <div class="search-box">
@@ -520,12 +520,29 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     const restricciones = data.restricciones;
     const permitidas = data.permitidas;
     
-    // ✅ CONVERTIR A NÚMEROS ANTES DE PASAR
     const horarioInicio = parseInt(data.horarioInicio, 10);
     const horarioFin = parseInt(data.horarioFin, 10);
     
     console.log('   Inicio:', horarioInicio, 'Fin:', horarioFin);
     
+    // ✅ DETECCIÓN DE BARRANQUILLA
+    if (selectedCity === 'barranquilla') {
+        document.getElementById('today-status').textContent = '✅ SIN RESTRICCIONES';
+        document.getElementById('restriction-label').innerHTML = '🎉 Sin pico y placa:';
+        document.getElementById('plates-restricted-today').innerHTML = '<p class="no-restriction" style="font-size: 1.1rem; font-weight: 800; background: #c8e6c9; padding: 15px; border-radius: 8px;">Esta ciudad NO tiene restricciones de circulación para vehículos particulares</p>';
+        document.getElementById('plates-allowed-today').innerHTML = '<p class="no-restriction">✅ Todos los vehículos (0-9) pueden circular</p>';
+        document.body.className = 'sin-pico';
+        
+        // Ocultar o personalizar countdown
+        const countdownContainer = document.getElementById('countdownContainer');
+        if (countdownContainer) {
+            countdownContainer.style.display = 'none';
+        }
+        
+        return; // Terminar función aquí
+    }
+    
+    // RESTO DEL CÓDIGO (para otras ciudades)
     updateCountdown(horarioInicio, horarioFin);
     
     if (esFinDeSemana) {
@@ -644,13 +661,38 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     
     selectedCity = ciudad;
     
+    // Remover clase active de todos los botones
     document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+    
+    // Activar botón de la ciudad seleccionada
     document.getElementById('btn-' + ciudad).classList.add('active');
     
+    // Actualizar información del día
     updateTodayInfo();
     
+    // ✅ ACTUALIZAR TÍTULO DINÁMICO
+    const data = datosHoy[ciudad];
+    
+    // 1. Actualizar title del navegador (en la pestaña)
+    const newTitle = `Pico y placa hoy en ${data.nombre} 🚗 | Consulta en Tiempo Real`;
+    document.title = newTitle;
+    
+    // 2. Actualizar meta og:title (para redes sociales)
+    document.querySelector('meta[property="og:title"]').setAttribute('content', newTitle);
+    
+    // 3. Actualizar meta description
+    const newDescription = `Consulta el pico y placa de hoy en ${data.nombre}. Horario: ${data.horario}. Consulta en tiempo real.`;
+    document.querySelector('meta[name="description"]').setAttribute('content', newDescription);
+    document.querySelector('meta[property="og:description"]').setAttribute('content', newDescription);
+    
+    // 4. Actualizar heading visible en la página
+    document.getElementById('pageTitle').textContent = `🚗 Pico y placa hoy en ${data.nombre}`;
+    
+    // Limpiar búsqueda anterior
     document.getElementById('result-box').innerHTML = '';
     document.getElementById('plate-input').value = '';
+    
+    console.log('✅ Ciudad actualizada:', data.nombre);
 }
         
         function searchPlate() {

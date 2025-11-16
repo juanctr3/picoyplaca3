@@ -56,7 +56,7 @@ $datos_ciudades_json = json_encode(array_map(function($codigo, $info) {
     
     <title><?php echo htmlspecialchars($titulo); ?></title>
     <meta name="description" content="<?php echo htmlspecialchars($descripcion); ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars($palabras_clave); ?>">
+    <meta name="keywords" content="<?php echo htmlspecialchars($palabras_clave); ?>" "a que hora empieza el pico y placa">
     <link rel="canonical" href="<?php echo $url_canonica; ?>">
     
     <!-- Open Graph para social -->

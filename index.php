@@ -78,7 +78,7 @@ if (preg_match('/pico-y-placa\/(\d{4})-(\d{2})-(\d{2})-(\w+)/', $_SERVER['REQUES
 
 // Generar meta tags
 if ($isDatePage) {
-    $title = "Pico y placa " . strtolower($dateData['dayNameEs']) . " " . $dateData['dayNum'] . " de " . $dateData['monthName'] . " en " . $dateData['cityName'];
+    $title = "Pico y placa el " . ucfirst($dateData['dayNameEs']) . " " . $dateData['dayNum'] . " de " . ucfirst($dateData['monthName']) . " en " . $dateData['cityName'] . " | 2025";
     $description = "Pico y placa en " . $dateData['cityName'] . " el " . $dateData['dayNameEs'] . " " . $dateData['dayNum'] . " de " . $dateData['monthName'] . ". Placas restringidas: " . (count($dateData['restrictions']) > 0 ? implode(', ', $dateData['restrictions']) : 'Sin restricción');
     $keywords = "pico y placa " . $dateData['cityName'] . ", pico y placa " . strtolower($dateData['dayNameEs']);
 } else {
@@ -538,17 +538,19 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
 </div>
             <h1 id="pageTitle">
     <?php if ($isDatePage): ?>
-        🚗 Pico y placa el <?php echo ucfirst($dateData['dayNameEs']); ?> en <?php echo htmlspecialchars($dateData['cityName']); ?>
+        🚗 Pico y placa el <?php echo ucfirst($dateData['dayNameEs']) . ' ' . $dateData['dayNum'] . ' de ' . ucfirst($dateData['monthName']); ?> en <?php echo htmlspecialchars($dateData['cityName']); ?>
     <?php else: ?>
         🚗 Pico y placa hoy en Bogotá
     <?php endif; ?>
 </h1>
             
+            <?php if (!$isDatePage): ?>
             <p class="subtitle" id="dynamicSubtitle">
                 Que no te pille el Poli 🚓 ni las Cámaras 📸 Mantente informado y 🪰 sobre las restricciones vehiculares en 
-                <span id="cityNameSubtitle" style="color: #ffd700; font-weight: 800; background: rgba(255, 215, 0, 0.2); padding: 4px 8px; border-radius: 6px;">Bogotá</span>
-                y evita perder hasta <span style="color: #ff6b6b; font-weight: 800;">$1.4 millones</span> 💸. Luego no 😩
+                <span id="cityNameSubtitle" style="color: #000000; font-weight: 900; background: rgba(255, 255, 255, 0.9); padding: 4px 10px; border-radius: 6px; text-shadow: none;">Bogotá</span>
+                y evita perder hasta <span style="color: #000000; font-weight: 900; background: rgba(255, 255, 255, 0.9); padding: 2px 6px; border-radius: 4px; text-shadow: none;">$1.4 millones</span> 💸. Luego no 😩
             </p>
+            <?php endif; ?>
             
         </header>
         
@@ -645,13 +647,13 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
 
 <button class="back-btn" onclick="backToHome()" style="display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; min-height: 44px;">Ver Pico Y Placa Hoy Y Más Fechas</button>
 
-<!-- ✅ SUBTITLE DINÁMICO PARA PÁGINA DE FECHA -->
+<!-- ✅ SUBTITLE SOLO PARA PÁGINA DE FECHA -->
 <p class="subtitle" style="margin-bottom: 20px;">
     Que no te pille el Poli 🚓 ni las Cámaras 📸 Mantente informado y 🪰 sobre las restricciones vehiculares en 
-    <span style="color: #ffd700; font-weight: 800; background: rgba(255, 215, 0, 0.2); padding: 4px 8px; border-radius: 6px;">
+    <span style="color: #000000; font-weight: 900; background: rgba(255, 255, 255, 0.9); padding: 4px 10px; border-radius: 6px; text-shadow: none;">
         <?php echo htmlspecialchars($dateData['cityName']); ?>
     </span>
-    y evita perder hasta <span style="color: #ff6b6b; font-weight: 800;">$1.4 millones</span> 💸. Luego no 😩
+    y evita perder hasta <span style="color: #000000; font-weight: 900; background: rgba(255, 255, 255, 0.9); padding: 2px 6px; border-radius: 4px; text-shadow: none;">$1.4 millones</span> 💸. Luego no 😩
 </p>
 
 <div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
@@ -713,6 +715,7 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     <script>
         let selectedCity = 'bogota';
         const datosHoy = JSON.parse('<?php echo $datos_hoy_json; ?>');
+        const festivosColombia = <?php echo json_encode($festivos); ?>;
         let countdownInterval;
         
         function updateTodayInfo() {
@@ -732,7 +735,19 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     document.getElementById('today-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
     document.getElementById('city-today').textContent = data.nombre;
     document.getElementById('city-schedule').textContent = data.horario;
-    document.getElementById('pageTitle').textContent = '🚗 Pico y Placa hoy en ' + data.nombre;
+    
+    // Solo actualizar H1 si NO estamos en página de fecha
+    const isDatePage = window.location.pathname.includes('/pico-y-placa/');
+    if (!isDatePage) {
+        document.getElementById('pageTitle').textContent = '🚗 Pico y Placa hoy en ' + data.nombre;
+    }
+    
+    // ✅ ACTUALIZAR SUBTITLE DINÁMICO
+    const cityNameSubtitle = document.getElementById('cityNameSubtitle');
+    if (cityNameSubtitle) {
+        cityNameSubtitle.textContent = data.nombre;
+        console.log('📝 Subtitle actualizado a:', data.nombre);
+    }
     
     const diaSemana = today.getDay();
     const esFinDeSemana = diaSemana === 0 || diaSemana === 6;
@@ -745,6 +760,14 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     
     console.log('   Inicio:', horarioInicio, 'Fin:', horarioFin);
     
+    // Función auxiliar para verificar festivos
+    function esFestivo(fecha) {
+        const fechaStr = fecha.toISOString().split('T')[0];
+        return festivosColombia.includes(fechaStr);
+    }
+    
+    const hoyFestivo = esFestivo(today);
+    
     // ✅ DETECCIÓN DE BARRANQUILLA
     if (selectedCity === 'barranquilla') {
         document.getElementById('today-status').textContent = '✅ SIN RESTRICCIONES';
@@ -753,7 +776,7 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         document.getElementById('plates-allowed-today').innerHTML = '<p class="no-restriction">✅ Todos los vehículos (0-9) pueden circular</p>';
         document.body.className = 'sin-pico';
         
-        // Ocultar o personalizar countdown
+        // Ocultar countdown
         const countdownContainer = document.getElementById('countdownContainer');
         if (countdownContainer) {
             countdownContainer.style.display = 'none';
@@ -765,7 +788,14 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     // RESTO DEL CÓDIGO (para otras ciudades)
     updateCountdown(horarioInicio, horarioFin);
     
-    if (esFinDeSemana) {
+    // Verificar festivo o fin de semana
+    if (hoyFestivo) {
+        document.getElementById('today-status').textContent = '🎉 Festivo';
+        document.getElementById('restriction-label').innerHTML = '✅ Sin restricción';
+        document.getElementById('plates-restricted-today').innerHTML = '<p class="no-restriction">🎉 Día Festivo - Sin restricción</p>';
+        document.getElementById('plates-allowed-today').innerHTML = '<p class="no-restriction">✅ Todos los vehículos (0-9)</p>';
+        document.body.className = 'sin-pico';
+    } else if (esFinDeSemana) {
         document.getElementById('today-status').textContent = 'Libre - Fin de Semana';
         document.getElementById('restriction-label').innerHTML = '✅ Sin restricción';
         document.getElementById('plates-restricted-today').innerHTML = '<p class="no-restriction">✅ Fin de Semana - Sin restricción</p>';
@@ -795,59 +825,93 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     fin = parseInt(fin, 10);
     
     console.log('🕐 Countdown iniciado');
-    console.log('   Inicio:', inicio, 'tipo:', typeof inicio);
-    console.log('   Fin:', fin, 'tipo:', typeof fin);
+    console.log('   Inicio:', inicio, 'Fin:', fin);
+    
+    function esFestivo(fecha) {
+        const fechaStr = fecha.toISOString().split('T')[0];
+        return festivosColombia.includes(fechaStr);
+    }
+    
+    function esFinDeSemana(fecha) {
+        const dia = fecha.getDay();
+        return dia === 0 || dia === 6; // 0 = Domingo, 6 = Sábado
+    }
+    
+    function siguienteDiaHabil(fechaInicio) {
+        let fecha = new Date(fechaInicio);
+        fecha.setDate(fecha.getDate() + 1);
+        fecha.setHours(inicio, 0, 0, 0);
+        
+        // Buscar el próximo día que NO sea fin de semana NI festivo
+        let intentos = 0;
+        while ((esFinDeSemana(fecha) || esFestivo(fecha)) && intentos < 14) {
+            fecha.setDate(fecha.getDate() + 1);
+            intentos++;
+        }
+        
+        return fecha;
+    }
     
     function calcularTiempo() {
         const ahora = new Date();
         const horaActual = ahora.getHours();
-        
-        console.log('⏰ Hora actual:', horaActual);
-        console.log('   ¿' + horaActual + ' >= ' + inicio + '?', horaActual >= inicio);
-        console.log('   ¿' + horaActual + ' < ' + fin + '?', horaActual < fin);
+        const diaActual = ahora.getDay();
         
         let proximoTiempo = 0;
         let titulo = '';
         let mensaje = '';
         
-        // ESTÁ ACTIVO AHORA
-        if (horaActual >= inicio && horaActual < fin) {
-            console.log('✅ PICO ACTIVO AHORA');
+        // ✅ VERIFICAR SI HOY ES FIN DE SEMANA O FESTIVO
+        const hoyEsFinDeSemana = esFinDeSemana(ahora);
+        const hoyEsFestivo = esFestivo(ahora);
+        
+        if (hoyEsFinDeSemana || hoyEsFestivo) {
+            // 🎉 HOY NO HAY PICO Y PLACA
+            console.log('🎉 HOY NO HAY RESTRICCIÓN:', hoyEsFinDeSemana ? 'Fin de semana' : 'Festivo');
+            
+            const proximoDiaHabil = siguienteDiaHabil(ahora);
+            const diasFaltantes = Math.ceil((proximoDiaHabil - ahora) / (1000 * 60 * 60 * 24));
+            
+            titulo = '🎉 SIN PICO Y PLACA HOY';
+            mensaje = '📅 Próxima restricción el ' + proximoDiaHabil.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }) + ':';
+            
+            proximoTiempo = (proximoDiaHabil.getTime() - ahora.getTime()) / 1000;
+            document.body.className = 'sin-pico';
+        }
+        // ✅ ESTÁ ACTIVO AHORA (día hábil y dentro del horario)
+        else if (horaActual >= inicio && horaActual < fin) {
+            console.log('🚨 PICO ACTIVO AHORA');
             titulo = '🚨 PICO Y PLACA ACTIVO';
             mensaje = '⏱️ Falta para terminar:';
             
-            const ahora_ms = ahora.getTime();
-            const fin_hoy = new Date(ahora);
-            fin_hoy.setHours(fin, 0, 0, 0);
+            const finHoy = new Date(ahora);
+            finHoy.setHours(fin, 0, 0, 0);
             
-            proximoTiempo = Math.max(0, (fin_hoy.getTime() - ahora_ms) / 1000);
+            proximoTiempo = Math.max(0, (finHoy.getTime() - ahora.getTime()) / 1000);
             document.body.className = 'pico-activo';
         } 
-        // INICIA HOY
+        // ✅ INICIA HOY (día hábil pero antes del horario)
         else if (horaActual < inicio) {
             console.log('✅ INICIA HOY A LAS', inicio + ':00');
             titulo = '✅ PICO Y PLACA HOY';
             mensaje = '⏳ Falta para iniciar:';
             
-            const ahora_ms = ahora.getTime();
-            const inicio_hoy = new Date(ahora);
-            inicio_hoy.setHours(inicio, 0, 0, 0);
+            const inicioHoy = new Date(ahora);
+            inicioHoy.setHours(inicio, 0, 0, 0);
             
-            proximoTiempo = (inicio_hoy.getTime() - ahora_ms) / 1000;
+            proximoTiempo = (inicioHoy.getTime() - ahora.getTime()) / 1000;
             document.body.className = 'sin-pico';
         } 
-        // INICIA MAÑANA
+        // ✅ YA PASÓ HOY - Buscar próximo día hábil
         else {
-            console.log('✅ INICIA MAÑANA A LAS', inicio + ':00');
+            console.log('✅ BUSCAR PRÓXIMO DÍA HÁBIL');
+            
+            const proximoDiaHabil = siguienteDiaHabil(ahora);
+            
             titulo = '✅ PRÓXIMO PICO Y PLACA';
-            mensaje = '📅 Falta para iniciar mañana:';
+            mensaje = '📅 Inicia el ' + proximoDiaHabil.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }) + ':';
             
-            const ahora_ms = ahora.getTime();
-            const inicio_mañana = new Date(ahora);
-            inicio_mañana.setDate(inicio_mañana.getDate() + 1);
-            inicio_mañana.setHours(inicio, 0, 0, 0);
-            
-            proximoTiempo = (inicio_mañana.getTime() - ahora_ms) / 1000;
+            proximoTiempo = (proximoDiaHabil.getTime() - ahora.getTime()) / 1000;
             document.body.className = 'sin-pico';
         }
         
@@ -855,7 +919,7 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         const minutos = Math.floor((proximoTiempo % 3600) / 60);
         const segundos = Math.floor(proximoTiempo % 60);
         
-        console.log('⏱️ Tiempo:', horas + 'h ' + minutos + 'm ' + segundos + 's');
+        console.log('⏱️ Tiempo:', horas + 'h', minutos + 'm', segundos + 's');
         
         const titleEl = document.getElementById('countdownTitle');
         if (titleEl) {
@@ -897,54 +961,45 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         return;
     }
     
-    // ✅ ACTUALIZAR TÍTULO EN PESTAÑA DEL NAVEGADOR
-    const newTitle = `Pico y placa hoy en ${data.nombre} 🚗 | Consulta en Tiempo Real`;
-    document.title = newTitle;
-    console.log('📝 Título actualizado:', newTitle);
+    // ✅ ACTUALIZAR TÍTULO SOLO EN PÁGINA PRINCIPAL (no en páginas de fecha)
+    const isDatePage = window.location.pathname.includes('/pico-y-placa/');
     
-    // ✅ ACTUALIZAR META TAGS
-    // Meta description
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-        metaDescription.setAttribute('content', `Consulta el pico y placa de hoy en ${data.nombre}. Horario: ${data.horario}. Consulta en tiempo real.`);
+    if (!isDatePage) {
+        const newTitle = `Pico y placa hoy en ${data.nombre} 🚗 | Consulta en Tiempo Real`;
+        document.title = newTitle;
+        console.log('📝 Título actualizado:', newTitle);
+        
+        // Actualizar meta tags solo en página principal
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+            metaDescription.setAttribute('content', `Consulta el pico y placa de hoy en ${data.nombre}. Horario: ${data.horario}. Consulta en tiempo real.`);
+        }
+        
+        const metaOgTitle = document.querySelector('meta[property="og:title"]');
+        if (metaOgTitle) {
+            metaOgTitle.setAttribute('content', newTitle);
+        }
+        
+        const metaOgDescription = document.querySelector('meta[property="og:description"]');
+        if (metaOgDescription) {
+            metaOgDescription.setAttribute('content', `Consulta el pico y placa de hoy en ${data.nombre}. Horario: ${data.horario}. Consulta en tiempo real.`);
+        }
+        
+        // Enviar evento a Google Analytics con el título correcto
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'page_view', {
+                page_title: newTitle,
+                page_location: window.location.href,
+                page_path: window.location.pathname,
+                ciudad: data.nombre
+            });
+        }
     }
     
-    // Meta og:title (Open Graph - Redes Sociales)
-    const metaOgTitle = document.querySelector('meta[property="og:title"]');
-    if (metaOgTitle) {
-        metaOgTitle.setAttribute('content', newTitle);
-    }
-    
-    // Meta og:description
-    const metaOgDescription = document.querySelector('meta[property="og:description"]');
-    if (metaOgDescription) {
-        metaOgDescription.setAttribute('content', `Consulta el pico y placa de hoy en ${data.nombre}. Horario: ${data.horario}. Consulta en tiempo real.`);
-    }
-    
-    // ✅ ACTUALIZAR HEADING VISIBLE
-    const pageTitle = document.getElementById('pageTitle');
-    if (pageTitle) {
-        pageTitle.textContent = `🚗 Pico y placa hoy en ${data.nombre}`;
-    }
-    
-    console.log('✅ Títulos actualizados para:', data.nombre);
+    console.log('✅ Meta tags actualizados para:', data.nombre);
     
     // Actualizar información del día
     updateTodayInfo();
-    
-        // ✅ ACTUALIZAR SUBTITLE DINÁMICO
-const cityNameSubtitle = document.getElementById('cityNameSubtitle');
-if (cityNameSubtitle) {
-    cityNameSubtitle.textContent = data.nombre;
-    
-    // Animación de fade
-    cityNameSubtitle.style.opacity = '0';
-    setTimeout(() => {
-        cityNameSubtitle.style.opacity = '1';
-    }, 100);
-}
-
-console.log('📝 Subtitle actualizado para:', data.nombre)
         
     // Limpiar búsqueda anterior
     document.getElementById('result-box').innerHTML = '';
@@ -1025,6 +1080,19 @@ console.log('📝 Subtitle actualizado para:', data.nombre)
         }
         
         document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si es página de fecha específica y enviar evento a Google Analytics
+            const isDatePage = window.location.pathname.includes('/pico-y-placa/');
+            
+            if (isDatePage && typeof gtag !== 'undefined') {
+                // Enviar evento de página de fecha con el título correcto
+                gtag('event', 'page_view', {
+                    page_title: document.title,
+                    page_location: window.location.href,
+                    page_path: window.location.pathname
+                });
+                console.log('📊 GA Event enviado para página de fecha:', document.title);
+            }
+            
             // CORRECCIÓN: Llamamos directamente a selectCity('bogota') para inicializar
             // toda la interfaz y el contador de forma robusta.
             selectCity('bogota');

@@ -34,14 +34,30 @@ foreach ($ciudades as $codigo => $info) {
 $datos_hoy_json = json_encode($datos_hoy);
 
 // ==========================================
-// PROCESAR URL DE FECHA ESPECÍFICA
+// PROCESAR NUEVO FORMATO DE URL: ciudad-dia-de-mes-de-año
+// Ej: /pico-y-placa/bogota-19-de-diciembre-de-2025
 // ==========================================
 
-if (preg_match('/pico-y-placa\/(\d{4})-(\d{2})-(\d{2})-(\w+)/', $_SERVER['REQUEST_URI'], $matches)) {
-    $year = (int)$matches[1];
-    $month = (int)$matches[2];
-    $day = (int)$matches[3];
-    $ciudad = $matches[4];
+// NUEVO REGEX: Captura ciudad, día, mes texto y año
+if (preg_match('/pico-y-placa\/(\w+)-(\d{1,2})-de-([a-z]+)-de-(\d{4})/i', $_SERVER['REQUEST_URI'], $matches)) {
+    $ciudad = $matches[1];
+    $day = (int)$matches[2];
+    $mesTexto = strtolower($matches[3]);
+    $year = (int)$matches[4];
+    
+    // Convertir mes texto a número
+    $meses = [
+        'enero' => 1, 'febrero' => 2, 'marzo' => 3, 'abril' => 4,
+        'mayo' => 5, 'junio' => 6, 'julio' => 7, 'agosto' => 8,
+        'septiembre' => 9, 'octubre' => 10, 'noviembre' => 11, 'diciembre' => 12
+    ];
+    
+    if (!isset($meses[$mesTexto])) {
+        http_response_code(404);
+        exit;
+    }
+    
+    $month = $meses[$mesTexto];
     
     if (isset($ciudades[$ciudad])) {
         try {
@@ -78,7 +94,7 @@ if (preg_match('/pico-y-placa\/(\d{4})-(\d{2})-(\d{2})-(\w+)/', $_SERVER['REQUES
 
 // Generar meta tags
 if ($isDatePage) {
-    $title = "Pico y placa el " . ucfirst($dateData['dayNameEs']) . " " . $dateData['dayNum'] . " de " . ucfirst($dateData['monthName']) . " en " . $dateData['cityName'] . " | 2025";
+    $title = "Pico y placa el " . ucfirst($dateData['dayNameEs']) . ' ' . $dateData['dayNum'] . " de " . ucfirst($dateData['monthName']) . " en " . $dateData['cityName'] . " | 2025";
     $description = "Pico y placa en " . $dateData['cityName'] . " el " . $dateData['dayNameEs'] . " " . $dateData['dayNum'] . " de " . $dateData['monthName'] . ". Placas restringidas: " . (count($dateData['restrictions']) > 0 ? implode(', ', $dateData['restrictions']) : 'Sin restricción');
     $keywords = "pico y placa " . $dateData['cityName'] . ", pico y placa " . strtolower($dateData['dayNameEs']);
 } else {
@@ -117,8 +133,11 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     <meta name="description" content="<?php echo htmlspecialchars($description); ?>">
     <meta name="keywords" content="<?php echo htmlspecialchars($keywords); ?>">
     
-    <?php if ($isDatePage): ?>
-    <link rel="canonical" href="https://picoyplacabogota.com.co/pico-y-placa/<?php echo $dateData['year']; ?>-<?php echo str_pad($dateData['month'], 2, '0', STR_PAD_LEFT); ?>-<?php echo str_pad($dateData['day'], 2, '0', STR_PAD_LEFT); ?>-<?php echo $dateData['city']; ?>">
+    <?php if ($isDatePage): 
+        $mesesCanonical = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        $mesCanonical = $mesesCanonical[$dateData['month'] - 1];
+    ?>
+    <link rel="canonical" href="https://picoyplacabogota.com.co/pico-y-placa/<?php echo $dateData['city']; ?>-<?php echo $dateData['dayNum']; ?>-de-<?php echo $mesCanonical; ?>-de-<?php echo $dateData['year']; ?>">
     <?php else: ?>
     <link rel="canonical" href="https://picoyplacabogota.com.co/">
     <?php endif; ?>
@@ -129,7 +148,7 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
     <meta property="og:description" content="<?php echo htmlspecialchars($description); ?>">
     <meta property="og:type" content="website">
     <?php if ($isDatePage): ?>
-    <meta property="og:url" content="https://picoyplacabogota.com.co/pico-y-placa/<?php echo $dateData['year']; ?>-<?php echo str_pad($dateData['month'], 2, '0', STR_PAD_LEFT); ?>-<?php echo str_pad($dateData['day'], 2, '0', STR_PAD_LEFT); ?>-<?php echo $dateData['city']; ?>">
+    <meta property="og:url" content="https://picoyplacabogota.com.co/pico-y-placa/<?php echo $dateData['city']; ?>-<?php echo $dateData['dayNum']; ?>-de-<?php echo $mesCanonical; ?>-de-<?php echo $dateData['year']; ?>">
     <?php else: ?>
     <meta property="og:url" content="https://picoyplacabogota.com.co/">
     <?php endif; ?>
@@ -145,8 +164,8 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
         "offers": {"@type": "Offer", "price": "0"}
     }
     </script>
-    
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2L2EV10ZWW"></script>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2L2EV10ZWW"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -630,6 +649,25 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
                 <div class="plates-list" id="plates-restricted-today"></div>
                 <p style="margin: 15px 0 10px 0; font-weight: 600;">✅ Habilitadas:</p>
                 <div class="plates-list" id="plates-allowed-today"></div>
+                
+                <!-- NUEVA SECCIÓN: PRÓXIMOS 60 DÍAS -->
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                    <h3 style="margin-bottom: 12px; color: #667eea;">📅 Próximos 60 días</h3>
+                    <button class="btn-search" onclick="verProximos60Dias()" style="width: 100%; margin-bottom: 15px;">
+                        🗓️ Ver días con restricción para mi placa
+                    </button>
+                    <div id="resultado-60dias" style="display: none;">
+                        <h4 style="margin-bottom: 10px;">Días con restricción:</h4>
+                        <ul id="lista-60dias" style="list-style: none; padding: 0; max-height: 300px; overflow-y: auto;">
+                            <!-- Aquí se cargarán los resultados -->
+                        </ul>
+                        <p id="total-60dias" style="margin-top: 15px; font-weight: 600; color: #667eea;"></p>
+                        <button class="btn-search" onclick="cerrar60Dias()" style="background: #ff6b6b; margin-top: 10px;">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+                
             </div>
         </div>
         
@@ -1023,13 +1061,18 @@ $ciudadesJSON = json_encode(array_map(function($codigo, $info) {
             }
         }
         
+        // ✅ NUEVA FUNCIÓN CON FORMATO ESPAÑOL
         function searchByDate(e) {
             e.preventDefault();
             const date = document.getElementById('dateInput').value;
             const city = document.getElementById('citySelect').value;
             if (date) {
                 const [year, month, day] = date.split('-');
-                window.location.href = `/pico-y-placa/${year}-${month}-${day}-${city}`;
+                const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                const monthName = monthNames[parseInt(month) - 1];
+                const dayNum = parseInt(day);
+                // NUEVO FORMATO: /pico-y-placa/bogota-19-de-diciembre-de-2025
+                window.location.href = `/pico-y-placa/${city}-${dayNum}-de-${monthName}-de-${year}`;
             }
         }
         
@@ -1195,6 +1238,81 @@ window.addEventListener('appinstalled', () => {
     console.log('✅ PWA instalada');
     hidePwaButton();
 });
+        
+        // ==========================================
+        // FUNCIONES PARA LOS PRÓXIMOS 60 DÍAS
+        // ==========================================
+        
+        function verProximos60Dias() {
+            const placa = document.getElementById('plate-input').value;
+            if (!placa || isNaN(placa)) {
+                alert('⚠️ Por favor ingresa un dígito de placa válido (0-9)');
+                return;
+            }
+            
+            const boton = document.querySelector('button[onclick="verProximos60Dias()"]');
+            const contenedor = document.getElementById('resultado-60dias');
+            const lista = document.getElementById('lista-60dias');
+            const total = document.getElementById('total-60dias');
+            
+            // Mostrar estado de carga
+            boton.textContent = '⏳ Cargando...';
+            boton.disabled = true;
+            
+            // Llamar a la API
+            const fechaHoy = new Date().toISOString().split('T')[0];
+            const url = `/api2.php?action=rango-personalizado&ciudad=${selectedCity}&placa=${placa}&fecha=${fechaHoy}&nocache=${Date.now()}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Limpiar lista
+                        lista.innerHTML = '';
+                        
+                        if (data.data.proximas_restricciones.length === 0) {
+                            lista.innerHTML = '<li style="padding: 15px; background: #d4edda; border-radius: 8px; color: #155724;">🎉 ¡Felicidades! No tienes restricciones en los próximos 60 días</li>';
+                        } else {
+                            // Generar lista de días
+                            data.data.proximas_restricciones.forEach(item => {
+                                const li = document.createElement('li');
+                                li.style.cssText = 'padding: 12px; margin-bottom: 8px; background: #f8f9fa; border-left: 4px solid #ff6b6b; border-radius: 6px; font-weight: 600;';
+                                li.innerHTML = `
+                                    <span style="color: #dc3545;">🚫 ${item.dia}</span> - 
+                                    <span style="color: #333;">${item.fecha}</span>
+                                    ${item.es_festivo ? '<span style="color: #ff6b6b; font-size: 0.8rem;"> (Festivo)</span>' : ''}
+                                    ${item.es_fin_semana ? '<span style="color: #ff6b6b; font-size: 0.8rem;"> (Fin de semana)</span>' : ''}
+                                `;
+                                lista.appendChild(li);
+                            });
+                        }
+                        
+                        // Mostrar total
+                        total.textContent = `📊 Total de días con restricción: ${data.data.total_dias_con_restriccion}`;
+                        
+                        // Mostrar contenedor
+                        contenedor.style.display = 'block';
+                        contenedor.scrollIntoView({ behavior: 'smooth' });
+                        
+                    } else {
+                        alert('❌ Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('❌ Hubo un error al cargar los datos');
+                })
+                .finally(() => {
+                    // Restaurar botón
+                    boton.textContent = '🗓️ Ver días con restricción para mi placa';
+                    boton.disabled = false;
+                });
+        }
+        
+        function cerrar60Dias() {
+            const contenedor = document.getElementById('resultado-60dias');
+            contenedor.style.display = 'none';
+        }
     </script>
 </body>
 </html>

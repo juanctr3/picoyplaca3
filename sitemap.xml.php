@@ -1,7 +1,7 @@
 <?php
 /**
  * SITEMAP.XML.PHP - Generador de Sitemap XML Dinámico
- * Genera automáticamente URLs de pico y placa para los próximos 30 días
+ * Genera automáticamente URLs de pico y placa en formato español para los próximos 60 días
  * 
  * Acceso: https://picoyplacabogota.com.co/sitemap.xml.php
  * O: https://picoyplacabogota.com.co/sitemap.xml (con rewrite en .htaccess)
@@ -15,7 +15,11 @@ $ciudades = $config['ciudades'];
 
 $dominio = 'https://picoyplacabogota.com.co';
 $hoy = new DateTime();
-$proximosDias = 30;
+
+// ==========================================
+// IMPORTANTE: Generar 60 días en lugar de 30
+// ==========================================
+$proximosDias = 60; // CAMBIO 1: De 30 a 60 días
 
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0">' . "\n";
@@ -33,9 +37,25 @@ echo "    <mobile:mobile/>\n";
 echo "  </url>\n\n";
 
 // ==========================================
-// 2. URLS DINÁMICAS - Próximos 30 días x todas las ciudades
+// 2. URLS DINÁMICAS - Próximos 60 días x todas las ciudades
 // ==========================================
-echo "  <!-- PRÓXIMOS 30 DÍAS DE PICO Y PLACA -->\n";
+echo "  <!-- PRÓXIMOS 60 DÍAS DE PICO Y PLACA -->\n";
+
+// CAMBIO 2: Array de meses en español para el sitemap
+$mesesSitemap = [
+    "01" => 'enero',
+    "02" => 'febrero', 
+    "03" => 'marzo',
+    "04" => 'abril',
+    "05" => 'mayo',
+    "06" => 'junio',
+    "07" => 'julio',
+    "08" => 'agosto',
+    "09" => 'septiembre',
+    "10" => 'octubre',
+    "11" => 'noviembre',
+    "12" => 'diciembre'
+];
 
 $interval = new DateInterval('P1D');
 $startDate = clone $hoy;
@@ -55,7 +75,12 @@ foreach ($period as $date) {
         $yearStr = $date->format('Y');
         $monthStr = $date->format('m');
         $dayStr = $date->format('d');
-        $dateStr = "$yearStr-$monthStr-$dayStr";
+        
+        // CAMBIO 3: Convertir mes a nombre en español
+        $mesSitemap = $mesesSitemap[$monthStr];
+        
+        // CAMBIO 4: Eliminar cero inicial del día
+        $dayNum = ltrim($dayStr, '0');
         
         // Calcular prioridad según proximidad
         $diasDiferencia = $hoy->diff($date)->days;
@@ -82,8 +107,9 @@ foreach ($period as $date) {
             $changefreq = 'weekly';
         }
         
+        // CAMBIO 5: Nuevo formato de URL en español
         echo "  <url>\n";
-        echo "    <loc>$dominio/pico-y-placa/$dateStr-$codigo</loc>\n";
+        echo "    <loc>{$dominio}/pico-y-placa/{$codigo}-{$dayNum}-de-{$mesSitemap}-de-{$yearStr}</loc>\n";
         echo "    <lastmod>" . $date->format('Y-m-d') . "</lastmod>\n";
         echo "    <changefreq>$changefreq</changefreq>\n";
         echo "    <priority>$priority</priority>\n";
@@ -170,10 +196,7 @@ echo "</urlset>";
 /*
 error_log("=== SITEMAP GENERADO ===");
 error_log("URLs generadas: " . $urlCount);
-error_log("Ciudades: " . count($ciudades));
-error_log("Días: " . $proximosDias);
-error_log("URL total: " . ($urlCount + count($ciudadesPrincipales) + count($paginas_estaticas) + count($api_endpoints) + 1));
-error_log("Tamaño aproximado: " . round(($urlCount * 0.2), 2) . " KB");
+error_log("Total URLs: " . ($urlCount + count($ciudadesPrincipales) + count($paginas_estaticas) + count($api_endpoints) + 1));
 error_log("=======================");
 */
 
